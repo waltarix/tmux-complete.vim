@@ -150,7 +150,8 @@ splitwords() {
     # split on spaces
     tr -s '[:space:]' '\n' |
     # remove surrounding non-word characters
-    grep -o "\\w.*\\w"
+    grep -o "\\w.*\\w" |
+    awk "${TMUXCOMPLETE_MINIMUM_WORD_LENGTH:-0} <= length"
 }
 
 sortu() {
@@ -158,6 +159,14 @@ sortu() {
         uniq
     else
         sort -u
+    fi
+}
+
+global_exclude() {
+    if [ -n "$TMUXCOMPLETE_GLOBAL_EXCLUSION_PATTERN" ]; then
+        grep -v "$TMUXCOMPLETE_GLOBAL_EXCLUSION_PATTERN"
+    else
+        cat
     fi
 }
 
@@ -173,5 +182,7 @@ capturepanes |
 split |
 # filter out items not matching pattern
 grep -e "$PATTERN" $GREPARGS |
+# filter out items matching global exclusion pattern
+global_exclude |
 # sort and remove duplicates
 sortu
